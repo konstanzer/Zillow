@@ -11,12 +11,14 @@ def get_zillow_data():
 	url = get_db_url(username, host, password, 'zillow')
 	#261 is code for single-family property
 	query = """
-		SELECT transactiondate, latitude/1e6, longitude/1e6, bedroomcnt,
-                bathroomcnt, calculatedfinishedsquarefeet, taxvaluedollarcnt,
-                yearbuilt, taxamount, taxamount/taxvaluedollarcnt taxrate, fips, logerror
+		SELECT parcelid, transactiondate, latitude/1e6, longitude/1e6, bedroomcnt, roomcnt,
+                bathroomcnt, calculatedfinishedsquarefeet, lotsizesquarefeet,
+                taxvaluedollarcnt, yearbuilt, taxamount, taxamount/taxvaluedollarcnt taxrate,
+                fips, structuretaxvaluedollarcnt, landtaxvaluedollarcnt
 		FROM properties_2017
 		JOIN predictions_2017 USING(parcelid)
-		WHERE propertylandusetypeid = 261 AND transactiondate BETWEEN '2017-05-01' AND '2017-08-31';
+		WHERE propertylandusetypeid = 261
+            AND transactiondate BETWEEN '2017-05-01' AND '2017-08-31';
 		"""
 	return pd.read_sql(query, url)
 
