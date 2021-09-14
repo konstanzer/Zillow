@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+ 
+	<header>
+		<div class="container">
+		<div id="brandname">
+			Estimating House Values
+		</div>
+		<img src="z.png" alt="Zillow" width="500"> 
+		<h2>A simple price predictor.</h2>
+		</div>
+	</header>
+ 
+	<div class="ml-container">
+	<form action="{{ url_for('predict')}}" method="POST">
+		<p>Square footage <input type = "number" name = "sqft" /></p>
+		<p>Zip code <input type = "number" name = "zip" /></p>
+		<p><input type = "submit" value = "Submit" /></p>
+	</form>
+	</div>
+
+</body>
+</html>
