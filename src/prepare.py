@@ -8,46 +8,56 @@ from shapely.geometry import Point, Polygon
 from sklearn.model_selection import train_test_split
 
 
-def wrangle_zillow(df, k=1.5):
+def wrangle_zillow(df, test_size=.15, random_state=0, k=1.5):
     
     df=df.rename(columns={'calculatedfinishedsquarefeet':'finishedsqft',
                           'lotsizesquarefeet':'lotsqft',
                           'structuretaxvaluedollarcnt':'structuretaxvalue',
                           'yearbuilt':'year', 'taxvaluedollarcnt':'taxvalue',
-                          'landtaxvaluedollarcnt':'landtaxvalue',
-                          'longitude/1e6':'longitude', 'latitude/1e6':'latitude'})
+                          'landtaxvaluedollarcnt':'landtaxvalue'})
     
-    df['year'].fillna(np.nanmedian(df.year), inplace=True)
-    df['finishedsqft'].fillna(np.nanmedian(df.finishedsqft), inplace=True)
-    df['lotsqft'].fillna(np.nanmedian(df.lotsqft), inplace=True)
+    for col in df.columns:
+        try:
+            df[col].fillna(np.nanmedian(df[col]), inplace=True)
+        except:
+            continue
+
+    df['bedroomcnt'].replace(0, np.median(df.bedroomcnt), inplace=True)
+    df['bathroomcnt'].replace(0, np.median(df.bathroomcnt), inplace=True)
     
+    #if MVP columns are missing, drop it
+    df=df.dropna(axis=0, subset=["taxvalue", "finishedsqft", "bedroomcnt"])
+
     #engineered to show what proportion of lot is finished space 
     df['livingarearatio'] = df.finishedsqft/df.lotsqft 
     
-    df['bedroomcnt'].replace(0, np.median(df.bedroomcnt), inplace=True)
-    df['bathroomcnt'].replace(0, np.median(df.bathroomcnt), inplace=True)
-    df['roomcnt'].replace(0, df.bedroomcnt+df.bathroomcnt+2, inplace=True)
-    
-    #if any other columns are missing, drop it
-    df=df.dropna(axis=0)
-    
     #engineered to show what proportion building is of total value
-    df['buildinglandvalueratio'] = df.structuretaxvalue/df.landtaxvalue 
+    #df['buildinglandvalueratio'] = df.structuretaxvalue/df.landtaxvalue 
+    df['taxrate'] = df.taxamount/df.taxvalue 
+
+    df.latitude, df.longitude = df.latitude/1e6, df.longitude/1e6
     
     #handling outliers assuming no distribution
-    cols = ['taxvalue', 'taxamount', 'finishedsqft', 'taxrate', 'structuretaxvalue']
+    cols = ['taxvalue', 'taxamount', 'taxrate', 'structuretaxvalue']
     df = iqr_method(df, k, cols)
         
-    int_cols = ['fips', 'bedroomcnt', 'bathroomcnt', 'taxvalue', 'taxamount', 'roomcnt',
-                'finishedsqft', 'year', 'structuretaxvalue', 'landtaxvalue', 'lotsqft']
+    int_cols = ['fips', 'bedroomcnt', 'bathroomcnt', 'taxvalue', 'taxamount',
+                'finishedsqft', 'year', 'structuretaxvalue', 'landtaxvalue',
+                'lotsqft', 'regionidzip']
     df[int_cols] = df[int_cols].astype('int')
     
     counties = {6111:"Ventura", 6037:"Los Angeles", 6059:"Orange"}
     df['county'] = df.fips.map(counties)
     
+    #why not?
+    zipzies = pd.get_dummies(df.regionidzip)
+    #counties = pd.get_dummies(df.county)
+    
+    df = pd.concat([df, zipzies], axis=1)
+    df=df.drop(columns=['fips'])
     y = df.pop('taxvalue')
     
-    return split_data(df, y, .15)
+    return split_data(df, y, test_size, random_state)
 
 
 def iqr_method(df, k, cols):
@@ -65,7 +75,6 @@ def iqr_method(df, k, cols):
 
 
 def z_score_method(df, cols):
-    
     #drop row if column has a z-score over 3, must be normal
     for col in cols:
         df = df[(np.abs(stats.zscore(df[col])) < 3)]
@@ -73,10 +82,10 @@ def z_score_method(df, cols):
     return df
     
     
-def split_data(X, y, test_size):
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=36)
+def split_data(X, y, test_size, random_state):
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state)
     test_size2 = test_size/(1-test_size)
-    X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=test_size2, random_state=36)
+    X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=test_size2, random_state=random_state)
     print("X_train, X_test, X_val, y_train, y_test, y_val")
     print(X_train.shape, X_test.shape, X_val.shape, y_train.shape, y_test.shape, y_val.shape)
     
@@ -86,7 +95,6 @@ def split_data(X, y, test_size):
 def geo_df(df, y, file):
     map_ = gpd.read_file(file)
     geom = [Point(xy) for xy in zip(df.longitude, df.latitude)]
-    df['taxvalue'] = y
     geo_df = gpd.GeoDataFrame(df, crs = {'init':'epsg:4326'}, geometry=geom)
     
     return geo_df, map_
