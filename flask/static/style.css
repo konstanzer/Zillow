@@ -17,7 +17,6 @@ header{
 	height:120px;
 	width:100%;
 	padding-top:30px;
- 
 }
  
 .main-header{
@@ -27,12 +26,6 @@ header{
 			width:100%;
 			margin:0px;
 		}
-#brandname{
-	float:left;
-	font-size:30px;
-	color: #fff;
-	margin: 10px;
-}
  
 header h2{
 	text-align:center;
@@ -40,15 +33,12 @@ header h2{
  
 }
  
- 
- 
 .btn-info {background-color: #2196F3;
 	height:40px;
 	width:100px;} /* Blue */
 .btn-info:hover {background: #0b7dda;}
  
- 
-.resultss{
+.results{
 	border-radius: 15px 50px;
     background: #345fe4;
     padding: 20px; 

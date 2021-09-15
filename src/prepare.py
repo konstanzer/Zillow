@@ -26,7 +26,7 @@ def wrangle_zillow(df, test_size=.15, random_state=0, k=1.5):
     df['bathroomcnt'].replace(0, np.median(df.bathroomcnt), inplace=True)
     
     #if MVP columns are missing, drop it
-    df=df.dropna(axis=0, subset=["taxvalue", "finishedsqft", "bedroomcnt"])
+    df=df.dropna(axis=0, subset=["taxvalue", "finishedsqft"])
 
     #engineered to show what proportion of lot is finished space 
     df['livingarearatio'] = df.finishedsqft/df.lotsqft 
@@ -38,7 +38,7 @@ def wrangle_zillow(df, test_size=.15, random_state=0, k=1.5):
     df.latitude, df.longitude = df.latitude/1e6, df.longitude/1e6
     
     #handling outliers assuming no distribution
-    cols = ['taxvalue', 'taxamount', 'taxrate', 'structuretaxvalue']
+    cols = ['taxvalue', 'taxamount', 'taxrate']
     df = iqr_method(df, k, cols)
         
     int_cols = ['fips', 'bedroomcnt', 'bathroomcnt', 'taxvalue', 'taxamount',
