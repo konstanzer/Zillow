@@ -1,18 +1,19 @@
 
 I am a data scientist at Zillow. This morning, I received the following email:
 
-	We want to be able to predict the values of single-unit properties that the tax district assesses using the property data from those with a transaction during the "hot months" of May-August 2017.
+We want to be able to predict the values of single-unit properties that the tax district assesses using the property data from those with a transaction during the "hot months" of May-August 2017.
 
-	Property taxes are assessed at the county level. The data has the tax amounts and tax value of the home so it shouldn't be too hard to calculate. Please include in your report to us the distribution of tax rates for each county so that we can see how much they vary within the properties in the county and the rates most properties hover around.
+Property taxes are assessed at the county level. The data has the tax amounts and tax value of the home so it shouldn't be too hard to calculate. Please include in your report to us the distribution of tax rates for each county so that we can see how much they vary within the properties in the county and the rates most properties hover around.
 
-	This is separate from the model you will build because, if you use tax amount in your model, you would be using a future data point to predict a future data point. For prediction purposes, we won't know tax amount until we know tax value.
+This is separate from the model you will build because, if you use tax amount in your model, you would be using a future data point to predict a future data point. For prediction purposes, we won't know tax amount until we know tax value.
 
 
 <img src="img/z.png" width="200"/>
+
 ---
+
 - [Data](#data)
 - [Hypotheses](#hypotheses)
-- [Planning pipeline](#planning-pipeline)
 - [Results](#results)
 
 Audience: Zillow data team
@@ -62,13 +63,8 @@ Data: properties_2017 and predictions_2017
 MVP X-variables: square feet of the home, number of bedrooms, number of bathrooms for target, property's assessed value aka taxvaluedollarcnt
 
 ![](img/taxrates.png)
+
 ![](img/socal.png)
-![](img/mvp.png)
-![](img/meanhist.png)
-![](img/meanprice.png)
-![](img/bestx.png)
-![](img/preds.png)
-![](img/resid.png)
 
 ## Hypotheses
 
@@ -77,6 +73,8 @@ MVP X-variables: square feet of the home, number of bedrooms, number of bathroom
 H<sub>0</sub> The sample of home values from County A comes from the same population as County B (i.e. that they both have the same median).
 
 H<sub>1</sub> The samples from County A and County B come from different populations.
+
+![](img/meanprice.png)
 
 LAC and OC
 * t-stat  = 40907982
@@ -103,4 +101,41 @@ H<sub>1</sub> There is a linear correlation between monthly charges and months t
 
 **Reject the null.**
 
+Finished square footage has a Pearson correlation of .51 with target.
+
+![](img/bestx.png)
+
+The mean price.
+
+![](img/meanhist.png)
+
+The MVP
+
+![](img/mvp.png)
+
 ## Results
+
+### Validation Set
+
+| metric/model                   | Mean Predictor | MVP (bathrooms & sqft.) | LinearReg (all non-cat. features) | LassoLars (w/ zip codes) |
+|--------------------------------|----------------|-------------------------|-----------------------------------|-------------------|
+| Root means squared error       |  245000        | 211000                  | 206000                            | 190000|
+| Mean absolute percentage error | .90            | .76                     | .73                               | .66   |
+| R-squared                      | 0              | .26                     | .29                               | .4    |
+
+### Test Set
+
+| metric/model                   | Mean Predictor | LassoLars (w/ zip codes) |
+|--------------------------------|----------------|--------------------------|
+| Root means squared error       | 255000         | 188000                  | 
+| Mean absolute percentage error | .86            | .63                     |
+| R-squared                      | 0              | .4                      |
+
+![](img/preds.png)
+
+![](img/resid.png)
+
+### Recommendations
+* Get accurate data! Zip codes are a good features but they don't match the county.
+* Get more data! Both training samlples and parameters. Using a three month-window isn't much to train on.
+* Location, location, location. More info about the area, like distance to beaches or presence of private schools, could help modeling a lot.
